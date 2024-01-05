@@ -1,9 +1,55 @@
 #include "db.h"
-#include "mysqlini.h"
 #include <muduo/base/Logging.h>
 
-static string dbname = "chat";
-static string server = "127.0.0.1";
+static string user;
+static string password;
+static string dbname;
+static string server;
+
+// 从配置文件中加载配置项
+bool MySQL::loadConfigFile()
+{
+	FILE *pf = fopen("/home/ty/chatserver/mysql.ini", "r");
+	if (!pf)
+	{
+        LOG_INFO << "mysql.ini file is not exist!";
+		return false;
+	}
+
+	while (!feof(pf))
+	{
+		char line[1024] = { 0 };
+		fgets(line, 1024, pf);
+		string str = line;
+		int idx = str.find('=', 0);
+		if (idx == -1) // 无效的配置项
+		{
+			continue;
+		}
+
+		int endidx = str.find('\n', idx);
+		string key = str.substr(0, idx);
+		string value = str.substr(idx + 1, endidx - idx - 1);
+
+		if (key == "username")
+		{
+            user = value;
+		}
+		else if (key == "password")
+		{
+			password = value;
+		}
+		else if (key == "dbname")
+		{
+			dbname = value;
+		}
+        else if (key == "ip")
+		{
+			server = value;
+		}
+	}
+	return true;
+}
 
 // 初始化数据库连接
 MySQL::MySQL()
